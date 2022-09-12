@@ -1,29 +1,25 @@
 name: Docker
 
 on:
-  workflow_dispatch: 
-    inputs: 
+  workflow_dispatch:
+    inputs:
       tag:
         description: "Tag"
         required: true
-        
 
-      
 jobs:
-
   build:
-  
     runs-on: ubuntu-latest
-    
+
     steps:
-    - uses: actions/checkout@v2
-              
-    - name: Docker login
-      run: |
-        docker login -u ${{secrets.DOCKER_USER}} -p ${{secrets.DOCKER_PASSWORD}}
-    
-    - name: Build image
-      run: docker build . --file Dockerfile --tag leantime/leantime:${{ github.event.inputs.tag }}
-      
-    - name: Docker Push
-      run: docker push leantime/leantime:${{ github.event.inputs.tag }}
+      - uses: actions/checkout@v2
+
+      - name: Docker login
+        run: |
+          docker login -u ${{secrets.DOCKER_USER}} -p ${{secrets.DOCKER_PASSWORD}}
+
+      - name: Build image
+        run: docker build --tag twist250/leantime:latest .
+
+      - name: Docker Push
+        run: docker push twist250/leantime:latest
