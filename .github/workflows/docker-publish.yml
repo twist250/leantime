@@ -1,25 +1,22 @@
-name: Docker
+name: Docker Image CI
 
 on:
-  workflow_dispatch:
-    inputs:
-      tag:
-        description: "Tag"
-        required: true
+  push:
+    branches: ["main"]
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
-
-      - name: Docker login
-        run: |
-          docker login -u ${{secrets.DOCKER_USER}} -p ${{secrets.DOCKER_PASSWORD}}
-
-      - name: Build image
-        run: docker build --tag twist250/leantime:latest .
-
-      - name: Docker Push
-        run: docker push twist250/leantime:latest
+      - name: Login to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USER }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Build and push
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          push: true
+          tags: twist250/leantime:latest
