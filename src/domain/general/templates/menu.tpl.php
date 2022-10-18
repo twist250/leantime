@@ -90,6 +90,11 @@ if (is_array($currentLink)) {
                         <a href="<?= BASE_URL ?>/projects/showProject/<?= $_SESSION['currentProject'] ?>"><?= $this->__("menu.project_settings") ?></a>
                     </li>
                 <?php } ?>
+                <?php if ($login::userIsAtLeast("manager")) { ?>
+                    <li>
+                        <a href="<?= BASE_URL ?>/dashboard/summary"><?= $this->__("menu.summary") ?></a>
+                    </li>
+                <?php } ?>
             </ul>
         </li>
     <?php } ?>

@@ -29,11 +29,10 @@ namespace leantime\domain\controllers {
             $this->timesheetService = new services\timesheets();
             $this->language = new core\language();
 
-            $_SESSION['lastPage'] = BASE_URL."/dashboard/show";
+            $_SESSION['lastPage'] = BASE_URL . "/dashboard/show";
 
             $reportService = new services\reports();
             $reportService->dailyIngestion();
-
         }
 
         /**
@@ -64,7 +63,6 @@ namespace leantime\domain\controllers {
             $this->tpl->assign("statusLabels", $this->ticketService->getStatusLabels());
 
             $this->tpl->display('dashboard.show');
-
         }
 
         public function post($params)
@@ -80,10 +78,8 @@ namespace leantime\domain\controllers {
                     $this->tpl->setNotification($this->language->__("notifications.ticket_saved"), "success");
                 }
 
-                $this->tpl->redirect(BASE_URL."/dashboard/show");
+                $this->tpl->redirect(BASE_URL . "/dashboard/show");
             }
-
-
         }
     }
 }

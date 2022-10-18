@@ -5,6 +5,7 @@ services:
     image: mysql:8.0
     container_name: mysql_leantime
     volumes:
+      - $PWD/db/leantime.sql:/docker-entrypoint-initdb.d/init.sql
       - $PWD/mysqldb_data:/var/lib/mysql
     restart: unless-stopped
     networks:

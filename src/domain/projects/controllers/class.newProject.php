@@ -17,8 +17,8 @@ namespace leantime\domain\controllers {
         public function run()
         {
 
-            if(!isset($_SESSION['lastPage'])) {
-                $_SESSION['lastPage'] = BASE_URL."/projects/showAll";
+            if (!isset($_SESSION['lastPage'])) {
+                $_SESSION['lastPage'] = BASE_URL . "/projects/showAll";
             }
 
             $tpl = new core\template();
@@ -29,7 +29,7 @@ namespace leantime\domain\controllers {
             $projectService = new services\projects();
             $language = new core\language();
 
-            if(!core\login::userIsAtLeast("clientManager")) {
+            if (!core\login::userIsAtLeast("clientManager")) {
                 $tpl->display('general.error');
                 exit();
             }
@@ -43,7 +43,9 @@ namespace leantime\domain\controllers {
                 'hourBudget' => '',
                 'assignedUsers' => array($_SESSION['userdata']['id']),
                 'dollarBudget' => '',
-                'state' => ''
+                'state' => '',
+                'timelineFrom' => '',
+                'timelineTo' => ''
             );
 
             if (isset($_POST['save']) === true) {
@@ -72,16 +74,16 @@ namespace leantime\domain\controllers {
                     'assignedUsers' => $assignedUsers,
                     'dollarBudget' => $_POST['dollarBudget'],
                     'state' => $_POST['projectState'],
+                    'timelineFrom' => $_POST['timelineFrom'],
+                    'timelineTo' => $_POST['timelineTo']
                 );
-
+                return $values;
                 if ($values['name'] === '') {
 
                     $tpl->setNotification($language->__("notification.no_project_name"), 'error');
-
                 } elseif ($values['clientId'] === '') {
 
                     $tpl->setNotification($language->__("notification.no_client"), 'error');
-
                 } else {
 
                     $projectName = $values['name'];
@@ -91,7 +93,7 @@ namespace leantime\domain\controllers {
                     $users = $projectRepo->getUsersAssignedToProject($id);
 
                     $mailer->setSubject($language->__('email_notifications.project_created_subject'));
-                    $actual_link = BASE_URL."/projects/showProject/" . $id . "";
+                    $actual_link = BASE_URL . "/projects/showProject/" . $id . "";
                     $message = sprintf($language->__('email_notifications.project_created_message'), $actual_link, $id, $projectName, $_SESSION["userdata"]["name"]);
                     $mailer->setHtml($message);
 
@@ -109,15 +111,13 @@ namespace leantime\domain\controllers {
                     //Take the old value to avoid nl character
                     $values['details'] = $_POST['details'];
 
-                    $tpl->setNotification(sprintf($language->__('notifications.project_created_successfully'), BASE_URL.'/leancanvas/simpleCanvas/'), 'success');
+                    $tpl->setNotification(sprintf($language->__('notifications.project_created_successfully'), BASE_URL . '/leancanvas/simpleCanvas/'), 'success');
 
-                    $tpl->redirect(BASE_URL."/projects/showProject/". $id);
-
+                    $tpl->redirect(BASE_URL . "/projects/showProject/" . $id);
                 }
 
 
                 $tpl->assign('values', $values);
-
             }
 
 
@@ -127,10 +127,10 @@ namespace leantime\domain\controllers {
 
 
 
-            if(core\login::userIsAtLeast("manager")) {
+            if (core\login::userIsAtLeast("manager")) {
                 $tpl->assign('availableUsers', $user->getAll());
                 $tpl->assign('clients', $clients->getAll());
-            }else{
+            } else {
                 $tpl->assign('availableUsers', $user->getAllClientUsers(core\login::getUserClientId()));
                 $tpl->assign('clients', array($clients->getClient(core\login::getUserClientId())));
             }
@@ -138,10 +138,6 @@ namespace leantime\domain\controllers {
             $tpl->assign('info', $msgKey);
 
             $tpl->display('projects.newProject');
-
-
         }
-
     }
-
 }

@@ -56,7 +56,6 @@ namespace leantime\domain\repositories {
         {
             $config = new core\config();
             $this->db = core\db::getInstance();
-
         }
 
         /**
@@ -76,6 +75,8 @@ namespace leantime\domain\repositories {
 					project.clientId,
 					project.hourBudget,
 					project.dollarBudget,
+					project.timelineFrom,
+					project.timelineTo,
 					project.state,
 					SUM(case when ticket.type <> 'milestone' AND ticket.type <> 'subtask' then 1 else 0 end) as numberOfTickets,
 					client.name AS clientName,
@@ -105,7 +106,7 @@ namespace leantime\domain\repositories {
 
             $sql = "SELECT COUNT(id) AS projectCount FROM `zp_projects`";
 
-            if($clientId != null && is_numeric($clientId)){
+            if ($clientId != null && is_numeric($clientId)) {
                 $sql .= " WHERE clientId = :clientId";
             }
 
@@ -119,9 +120,9 @@ namespace leantime\domain\repositories {
             $values = $stmn->fetch();
             $stmn->closeCursor();
 
-            if(isset($values['projectCount']) === true) {
+            if (isset($values['projectCount']) === true) {
                 return $values['projectCount'];
-            }else{
+            } else {
                 return 0;
             }
         }
@@ -139,6 +140,8 @@ namespace leantime\domain\repositories {
 					project.state,
 					project.hourBudget,
 					project.dollarBudget,
+					project.timelineFrom,
+					project.timelineTo,
 					SUM(case when ticket.type <> 'milestone' AND ticket.type <> 'subtask' then 1 else 0 end) as numberOfTickets,
 					client.name AS clientName,
 					client.id AS clientId 
@@ -186,6 +189,8 @@ namespace leantime\domain\repositories {
 					project.clientId,
 					project.hourBudget,
 					project.dollarBudget,
+					project.timelineFrom,
+					project.timelineTo,
 					project.state,
 					SUM(case when ticket.type <> 'milestone' AND ticket.type <> 'subtask' then 1 else 0 end) as numberOfTickets,
 					client.name AS clientName,
@@ -254,6 +259,8 @@ namespace leantime\domain\repositories {
 					zp_projects.state,
 					zp_projects.hourBudget,
 					zp_projects.dollarBudget,
+					zp_projects.timelineFrom,
+					zp_projects.timelineTo,
 					zp_clients.name AS clientName,
 					SUM(case when zp_tickets.type <> 'milestone' AND zp_tickets.type <> 'subtask' then 1 else 0 end) as numberOfTickets
 				FROM zp_projects 
@@ -274,6 +281,46 @@ namespace leantime\domain\repositories {
             $values = $stmn->fetch();
             $stmn->closeCursor();
 
+
+            return $values;
+        }
+
+        /**
+         * Get all projects - with assigned PM
+         *
+         * @access public
+         * @return mixed
+         */
+        public function getProjectsWithPM()
+        {
+
+            $query = "SELECT
+					DISTINCT zp_user.id,
+					zp_user.firstname,
+					zp_user.lastname,
+					zp_user.username,
+                    zp_projects.id, 
+					zp_projects.name, 
+					zp_projects.hourBudget,
+					zp_projects.dollarBudget,
+					zp_projects.timelineFrom,
+					zp_projects.timelineTo
+				FROM zp_relationuserproject 
+				LEFT JOIN zp_user ON zp_relationuserproject.userId = zp_user.id
+				LEFT JOIN zp_projects ON zp_relationuserproject.projectId = zp_projects.id
+                WHERE zp_user.role = 60
+				GROUP BY 
+					zp_projects.id, 
+					zp_projects.name, 
+					zp_projects.clientId, 
+					zp_projects.details
+                ";
+
+            $stmn = $this->db->database->prepare($query);
+
+            $stmn->execute();
+            $values = $stmn->fetchAll();
+            $stmn->closeCursor();
 
             return $values;
         }
@@ -308,7 +355,6 @@ namespace leantime\domain\repositories {
             $stmn->closeCursor();
 
             return $values;
-
         }
 
 
@@ -328,7 +374,6 @@ namespace leantime\domain\repositories {
             $stmn->closeCursor();
 
             return $values;
-
         }
 
         public function recursive_array_search($needle, $haystack)
@@ -392,13 +437,11 @@ namespace leantime\domain\repositories {
 
                     $total = $total + $value;
                     $chartArr[$dayKey] = $total;
-
                 }
             }
 
 
             return $chartArr;
-
         }
 
         public function getProjectBookedDollars($id)
@@ -417,7 +460,6 @@ namespace leantime\domain\repositories {
             $stmn->closeCursor();
 
             return $values;
-
         }
 
         /**
@@ -440,7 +482,6 @@ namespace leantime\domain\repositories {
             $stmn->closeCursor();
 
             return $values;
-
         }
 
         /**
@@ -453,13 +494,15 @@ namespace leantime\domain\repositories {
         {
 
             $query = "INSERT INTO `zp_projects` (
-				`name`, `details`, `clientId`, `hourBudget`, `dollarBudget`
+				`name`, `details`, `clientId`, `hourBudget`, `dollarBudget`, `timelineFrom`, `timelineTo`
 			) VALUES (
 				:name,
 				:details,
 				:clientId,
 				:hourBudget,
-				:dollarBudget
+				:dollarBudget,
+                :timelineFrom,
+                :timelineTo
 			)";
 
             $stmn = $this->db->database->prepare($query);
@@ -469,6 +512,8 @@ namespace leantime\domain\repositories {
             $stmn->bindValue('clientId', $values['clientId'], PDO::PARAM_STR);
             $stmn->bindValue('hourBudget', $values['hourBudget'], PDO::PARAM_STR);
             $stmn->bindValue('dollarBudget', $values['dollarBudget'], PDO::PARAM_STR);
+            $stmn->bindValue('timelineFrom', $values['timelineFrom'], PDO::PARAM_STR);
+            $stmn->bindValue('timelineTo', $values['timelineTo'], PDO::PARAM_STR);
 
             $stuff = $stmn->execute();
 
@@ -485,11 +530,9 @@ namespace leantime\domain\repositories {
                 foreach ($values['assignedUsers'] as $userId) {
                     $this->addProjectRelation($userId, $projectId);
                 }
-
             }
 
             return $projectId;
-
         }
 
         /**
@@ -508,7 +551,9 @@ namespace leantime\domain\repositories {
 				clientId = :clientId,
 				state = :state,
 				hourBudget = :hourBudget,
-				dollarBudget = :dollarBudget
+				dollarBudget = :dollarBudget,
+                timelineFrom = :timelineFrom,
+                timelineTo = :timelineTo
 				WHERE id = :id 
 				
 				LIMIT 1";
@@ -521,6 +566,8 @@ namespace leantime\domain\repositories {
             $stmn->bindValue('state', $values['state'], PDO::PARAM_STR);
             $stmn->bindValue('hourBudget', $values['hourBudget'], PDO::PARAM_STR);
             $stmn->bindValue('dollarBudget', $values['dollarBudget'], PDO::PARAM_STR);
+            $stmn->bindValue('timelineFrom', $values['timelineFrom'], PDO::PARAM_STR);
+            $stmn->bindValue('timelineTo', $values['timelineTo'], PDO::PARAM_STR);
             $stmn->bindValue('id', $id, PDO::PARAM_STR);
 
             $stmn->execute();
@@ -536,9 +583,7 @@ namespace leantime\domain\repositories {
                 foreach ($values['assignedUsers'] as $userId) {
                     $this->addProjectRelation($userId, $id);
                 }
-
             }
-
         }
 
         /**
@@ -557,7 +602,6 @@ namespace leantime\domain\repositories {
 
             $stmn->execute();
             $stmn->closeCursor();
-
         }
 
         /**
@@ -584,13 +628,10 @@ namespace leantime\domain\repositories {
             if (count($values) == 0) {
 
                 return false;
-
             } else {
 
                 return true;
-
             }
-
         }
 
         /**
@@ -781,9 +822,6 @@ namespace leantime\domain\repositories {
             $stmn->execute();
 
             $stmn->closeCursor();
-
         }
-
     }
-
 }

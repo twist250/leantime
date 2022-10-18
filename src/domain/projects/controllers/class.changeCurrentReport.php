@@ -6,7 +6,7 @@ namespace leantime\domain\controllers {
     use leantime\domain\repositories;
     use leantime\domain\services;
 
-    class changeCurrentProject
+    class changeCurrentReport
     {
 
 
@@ -37,7 +37,7 @@ namespace leantime\domain\controllers {
 
                         $this->projectService->changeCurrentSessionProject($id);
 
-                        $this->tpl->redirect(BASE_URL . "/dashboard/show");
+                        $this->tpl->redirect(BASE_URL . "/reports/show");
                     } else {
                         $this->tpl->redirect(BASE_URL . "/404/");
                     }
@@ -62,7 +62,7 @@ namespace leantime\domain\controllers {
             if (isset($_GET['id'])) {
 
                 $id = filter_var($_GET['id'], FILTER_SANITIZE_NUMBER_INT);
-                $this->tpl->redirect(BASE_URL . "/projects/changeCurrentProject/" . $id);
+                $this->tpl->redirect(BASE_URL . "/projects/changeCurrentReport/" . $id);
             }
         }
     }

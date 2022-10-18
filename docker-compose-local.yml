@@ -18,6 +18,9 @@ services:
 
   leantime:
     image: twist250/leantime
+    # build: 
+    #   context: .
+    #   dockerfile: Dockerfile
     container_name: leantime
     restart: unless-stopped
     networks:
@@ -33,8 +36,7 @@ services:
       LEAN_SESSION_PASSWORD: 'GD8Fozemg3AqM9my86TTfgTeGPXXkPF7'         # Salting sessions. Replace with a strong password
       LEAN_SESSION_EXPIRATION: '28800'                                    # How many seconds after inactivity should we logout?  28800seconds = 8hours
     volumes:
-      - $PWD/public_userfiles:/var/www/html/public/userfiles
-      - $PWD/userfiles:/var/www/html/userfiles
+      - $PWD:/var/www/html
     ports:
       - "8080:80"                                                       # The port to expose and access Leantime
     depends_on:
